@@ -18,7 +18,7 @@ class QPSSpider(BaseSpider):
 
 
     # Max concurrency is limited by global CONCURRENT_REQUESTS setting
-    max_concurrent_requests = 8
+    max_concurrent_requests = 100
     # Requests per second goal
     qps = None # same as: 1 / download_delay
     # time in seconds to delay server responses
@@ -35,8 +35,10 @@ class QPSSpider(BaseSpider):
         if self.sleep is not None:
             url += '?sleep={0}'.format(self.sleep)
 
+        i = 0
         while True:
-            yield Request(url, dont_filter=True)
+            yield Request(url + '&i=%d' % (i % 200), dont_filter=True)
+            i += 1
 
     def parse(self, response):
         pass

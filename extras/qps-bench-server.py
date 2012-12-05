@@ -22,6 +22,8 @@ class Root(Resource):
         return self
 
     def render(self, request):
+        if request.args['i'][0] != '0':
+            return ''
         now = time()
         delta = now - self.start
 
