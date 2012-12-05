@@ -11,7 +11,7 @@ class Root(Resource):
     def __init__(self):
         Resource.__init__(self)
         self.concurrent = 0
-        self.tail = deque(maxlen=100)
+        self.tail = deque(maxlen=10)
         self._reset_stats()
 
     def _reset_stats(self):
@@ -23,21 +23,19 @@ class Root(Resource):
 
     def render(self, request):
         now = time()
-        delta = now - self.lasttime
-
-        # reset stats on high iter-request times caused by client restarts
-        if delta > 3: # seconds
-            self._reset_stats()
-            return ''
+        delta = now - self.start
 
         self.tail.appendleft(delta)
         self.lasttime = now
         self.concurrent += 1
 
-        if now - self.lastmark >= 3:
-            self.lastmark = now
-            qps = len(self.tail) / sum(self.tail)
-            print('samplesize={0} concurrent={1} qps={2:0.2f}'.format(len(self.tail), self.concurrent, qps))
+        tail_delta = self.tail[0] - self.tail[-1]
+        if tail_delta:
+            qps = (len(self.tail) - 1) / tail_delta
+            print('time={0} samplesize={1} concurrent={2} qps={3:0.2f}'.format(delta,
+                                                                               len(self.tail),
+                                                                               self.concurrent,
+                                                                               qps))
 
         if 'sleep' in request.args:
             sleep = float(request.args['sleep'][0])
